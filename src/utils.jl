@@ -19,7 +19,7 @@ function rec_set!(dict::AbstractDict, key, val)::AbstractDict
     elseif typeof(key) <: Tuple
         if first(key) ∈ keys(dict)
             sub_dict = dict[first(key)]
-            if typeof(sub_dict) <: AbstractDict
+            if (typeof(sub_dict) <: AbstractDict) & (length(key) > 1)
                 rec_set!(sub_dict, key[2:end], val)
             else
                 dict[first(key)] = val
