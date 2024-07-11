@@ -32,7 +32,6 @@
         @test orig == Dict("x" => Dict(iterate_name => [1, 2, 3]))
     end
 
-    return nothing
     # test fully parsed for both
     for symbol_name in SYMBOL_NAMES
         for iterate_name in ITERATE_NAMES
