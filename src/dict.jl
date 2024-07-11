@@ -15,14 +15,6 @@ function parse_symbols(dict::AbstractDict)
 end
 
 function parse_iterates(dict::AbstractDict)#::Vector{AbstractDict}
-    listed = AbstractDict[]
-    while !isdisjoint(all_keys(dict), ITERATE_NAMES)
-    end
-    # for (key, value) in dict
-    #     if key ∈ ITERATE_NAMES
-    #         return value
-    #     end
-    # end
 end
 
 function parse_experiment(dict::AbstractDict)::Vector{AbstractDict}
