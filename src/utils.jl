@@ -1,14 +1,11 @@
-# helper function to get all keys in a multilevel dict
-function all_keys(dict::AbstractDict, parent_key::Tuple=())::Set{Tuple}
-    key_list = Set(Tuple[])
-    for (key, value) in dict
-        if typeof(value) <: AbstractDict
-            for key in all_keys(value, (parent_key..., key))
-                push!(key_list, key)
-            end
-        else
-            push!(key_list, (parent_key..., key))
+# # helper function to get all keys in a multilevel dict
+function all_keys(dict, key_list=Tuple[], parent_key=())::Vector{Tuple}
+    if typeof(dict) <: AbstractDict
+        for (key, sub_dict) in dict
+            all_keys(sub_dict, key_list, (parent_key..., key))
         end
+    else
+        push!(key_list, parent_key)
     end
     return key_list
 end
