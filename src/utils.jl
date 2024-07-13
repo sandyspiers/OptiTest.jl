@@ -10,6 +10,22 @@ function all_keys(dict, key_list=Tuple[], parent_key=())::Vector{Tuple}
     return key_list
 end
 
+function expand(tup)
+    if length(tup) > 1
+        return (tup[1:(end - 1)], tup[end]...)
+    end
+    return tup
+end
+
+function tup_keys(dict, parent=())
+    if typeof(dict) <: AbstractDict
+        ret = collect(tup_keys(sd, (parent..., sk)) for (sk, sd) in dict)
+        @info "ret" ret
+        return ret
+    end
+    return (parent)
+end
+
 function rec_set!(dict::AbstractDict, key, val)::AbstractDict
     if key ∈ keys(dict)
         dict[key] = val
