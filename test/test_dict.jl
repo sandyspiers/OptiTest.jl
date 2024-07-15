@@ -6,18 +6,22 @@
             orig = AnyDict("x" => AnyDict(symbol_label => symbol))
             new = parse_symbols!(orig)
             # check symbol properlly constructed
-            @test new["x"] == Symbol(symbol)
-            @test new == AnyDict("x" => Symbol(symbol))
+            @test new["x"] == eval(Symbol(symbol))
+            @test new == AnyDict("x" => eval(Symbol(symbol)))
             # test a nested one
             orig = AnyDict(
                 "x" => AnyDict(symbol_label => symbol),
                 "y" => AnyDict("z" => AnyDict(symbol_label => symbol)),
             )
             new = parse_symbols!(orig)
-            @test new["x"] == Symbol(symbol)
-            @test new["y"]["z"] == Symbol(symbol)
-            @test new ==
-                AnyDict("x" => Symbol(symbol), "y" => AnyDict("z" => Symbol(symbol)))
+            @test new["x"] == eval(Symbol(symbol))
+            @test new["y"]["z"] == eval(Symbol(symbol))
+            if symbol == "maximum"
+                @test new["x"]([1, 2]) == 2
+            end
+            @test new == AnyDict(
+                "x" => eval(Symbol(symbol)), "y" => AnyDict("z" => eval(Symbol(symbol)))
+            )
         end
     end
 

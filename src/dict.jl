@@ -30,7 +30,7 @@ Warnings:
 function parse_symbols!(dict::AbstractDict)
     for nested_key in nested_keys(dict)
         if last(nested_key) ∈ SYMBOL_NAMES
-            sym = Symbol(nested_get(dict, nested_key))
+            sym = eval(Symbol(nested_get(dict, nested_key)))
             nested_set!(dict, all_but_last(nested_key), sym)
         end
     end
