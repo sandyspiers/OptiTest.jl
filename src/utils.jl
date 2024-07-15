@@ -1,3 +1,5 @@
+# # General useful utility functions
+
 """
     all_but_last(iterable)
 
