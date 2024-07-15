@@ -1,19 +1,30 @@
 @testset "utils.jl" begin
-    # test all keys method
-    d = Dict("x" => nothing, "y" => 5)
-    @test nested_keys(d) == [("x",), ("y",)]
-    d = Dict("xx" => nothing, "yy" => Dict("zz" => 5), "aa" => "hello")
-    @test nested_keys(d) == [("xx",), ("yy", "zz"), ("aa",)]
-
-    # test nested get
-    d = Dict("x" => nothing, "y" => Dict("z" => 5))
-    @test nested_get(d, ("y", "z")) == 5
-    @test nested_get(d, "x") === nothing
-
-    # test nested set
-    d = AnyDict("x" => nothing, "y" => AnyDict("z" => 5))
-    nested_set!(d, ("y", "z"), "hello!")
-    @test d["y"]["z"] == "hello!"
-    nested_set!(d, "x", 50)
-    @test d["x"] == 50
+    # test dictionary iterates
+    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
+    iterates = iterated_dict!(orig, key -> last(key) == '!', key -> key[1:(end - 1)])
+    # check there is correct number
+    @test length(collect(iterates)) == 18
+    # check the first one
+    @test first(iterates) == Dict("x" => 1, "y" => 4, "z" => 100, "a" => 100)
+    @test last(iterates) == Dict("x" => 3, "y" => 6, "z" => 100, "a" => 200)
+    # check its mutating correctly
+    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
+    for _ in iterated_dict!(orig, key -> last(key) == '!', key -> key[1:(end - 1)])
+        @test orig == Dict("x" => 1, "y" => 4, "z" => 100, "a" => 100)
+        break
+    end
+    # check special functions
+    function update_seed(dict)
+        dict["seed"] = get(dict, "seed", 0) + 1
+        return dict
+    end
+    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
+    iterates = iterated_dict!(
+        orig, key -> last(key) == '!', key -> key[1:(end - 1)], update_seed
+    )
+    i = 1
+    for _ in iterates
+        @test orig["seed"] == i
+        i += 1
+    end
 end
