@@ -88,6 +88,8 @@ Dict{String, Any} with 2 entries:
 function nested_set!(dict::AbstractDict, key, val)::AbstractDict
     if key ∈ keys(dict)
         dict[key] = val
+    elseif length(key) == 1
+        dict[first(key)] = val
     else
         sub_dict = nested_get(dict, all_but_last(key))
         sub_dict[last(key)] = val

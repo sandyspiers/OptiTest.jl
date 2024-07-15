@@ -1,5 +1,6 @@
 using OptiTest: SYMBOL_NAMES, ITERATE_NAMES
-using OptiTest: all_keys, rec_get, rec_set!
+using OptiTest: AnyDict
+using OptiTest: nested_keys, nested_get, nested_set!
 using OptiTest: parse_symbols!, parse_iterates!, parse_experiment!
 using Test
 using Aqua
