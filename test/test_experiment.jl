@@ -24,6 +24,16 @@
     for t in tsts
     end
     @test ex.instance_params["seed"] == 3
+    # test expressions
+    ex = Experiment(
+        "test",
+        (x...) -> println(x...),
+        rand,
+        Dict{Any,Any}("x!" => [10, 20, 30], "s!" => 1:10),
+        Dict{Any,Any}("solver!" => ["cat", "dog", "monkey"], "tt!" => 1:5),
+    )
+    tsts = tests!(ex)
+    @test length(tsts) == 450
     # test copy
     ex = Experiment(
         "test",

@@ -2,6 +2,8 @@ module OptiTest
 
 using Base.Iterators: product
 
+using Distributed: pmap
+
 struct Experiment
     name::String
     generic_solver::Function
@@ -11,7 +13,7 @@ struct Experiment
 end
 
 function run(experiment::Experiment)
-    return true
+    return pmap(experiment.generic_solver, tests(experiment))
 end
 
 include("utils.jl")

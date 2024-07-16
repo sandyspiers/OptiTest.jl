@@ -58,3 +58,8 @@ Here are some examples:
 
 ```julia
 ```
+
+### Parallel Tests
+
+It is the users responsibility to provide some distributed workers to conduct an experiment.
+This may seem annoying, but it allows for warmstarting, precompling, image building (maybe?) and remote workers.
