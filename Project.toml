@@ -10,8 +10,7 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 julia = "1.6.7"
 
 [extras]
-Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Test"]
+test = ["Test"]
