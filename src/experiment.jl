@@ -16,3 +16,7 @@ function tests!(experiment::Experiment)
         )
     )
 end
+
+function tests(experiment::Experiment)
+    return map(deepcopy, tests!(deepcopy(experiment)))
+end

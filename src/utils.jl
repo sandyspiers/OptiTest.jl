@@ -1,4 +1,5 @@
-function set_pairs!(dict::AbstractDict, key_value_pairs)
+# # Takes an iterable of (key,value) and sets each in Dict
+function set_pairs!(dict::AbstractDict, key_value_pairs)::AbstractDict
     for (key, value) in key_value_pairs
         dict[key] = value
     end
@@ -28,6 +29,6 @@ function iterated_dict!(
 end
 
 # # fakes a vector if it is not already one
-function vectorize(maybe_vector)
+function vectorize(maybe_vector)::Vector
     return typeof(maybe_vector) <: AbstractVecOrMat ? maybe_vector : [maybe_vector]
 end

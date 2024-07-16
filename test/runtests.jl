@@ -1,5 +1,6 @@
+using OptiTest: OptiTest
 using OptiTest: iterated_dict!
-using OptiTest: Experiment, tests!
+using OptiTest: Experiment, tests!, tests
 using Test
 using Aqua
 
