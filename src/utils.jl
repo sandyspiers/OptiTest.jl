@@ -32,3 +32,18 @@ end
 function vectorize(maybe_vector)::Vector
     return typeof(maybe_vector) <: AbstractVecOrMat ? maybe_vector : [maybe_vector]
 end
+
+# # flatten a nested dictionary
+function flatten(dict::AbstractDict, delim::String="::")::AbstractDict
+    d = empty(dict)
+    for (key, val) in dict
+        if typeof(val) <: AbstractDict
+            for (k, v) in flatten(val, delim)
+                d[key * delim * k] = v
+            end
+        else
+            d[key] = val
+        end
+    end
+    return d
+end

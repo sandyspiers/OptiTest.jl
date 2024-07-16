@@ -13,13 +13,13 @@
     )
     # remove workers
     rmprocs(workers())
-    ids = run(ex)
-    @test all(ids .== 1)
+    df = run(ex)
+    @test all(df.result .== 1)
 
     # add 2 more
     addprocs(6)
     @everywhere import OptiTest
-    ids = run(ex)
-    @test minimum(ids) < maximum(ids)
+    df = run(ex)
+    @test minimum(df.result) < maximum(df.result)
     rmprocs(workers())
 end

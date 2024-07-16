@@ -20,3 +20,16 @@ end
 function tests(experiment::Experiment)
     return map(deepcopy, tests!(deepcopy(experiment)))
 end
+
+function _run(experiment::Experiment)::DataFrame
+    tsts = tests(experiment)
+    results = pmap(experiment.generic_solver, tsts)
+    all = (
+        Dict(
+            "instance" => test.instance_params,
+            "solver" => test.solver_params,
+            "result" => res,
+        ) for (test, res) in zip(tsts, results)
+    )
+    return DataFrame(vcat(flatten.(all)...))
+end
