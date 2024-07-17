@@ -1,30 +1,49 @@
 @testset "utils.jl" begin
-    # test dictionary iterates
-    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
-    iterates = iterated_dict!(orig, key -> last(key) == '!', key -> key[1:(end - 1)])
-    # check there is correct number
-    @test length(collect(iterates)) == 18
-    # check the first one
-    @test first(iterates) == Dict("x" => 1, "y" => 4, "z" => 100, "a" => 100)
-    @test last(iterates) == Dict("x" => 3, "y" => 6, "z" => 100, "a" => 200)
-    # check its mutating correctly
-    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
-    for _ in iterated_dict!(orig, key -> last(key) == '!', key -> key[1:(end - 1)])
-        @test orig == Dict("x" => 1, "y" => 4, "z" => 100, "a" => 100)
-        break
+    # test set pairs
+    d = Dict("x" => 2, "y" => 4)
+    set!(d, ["x", "y"], [3, 5])
+    @test d["x"] == 3
+    @test d["y"] == 5
+
+    # test flatten
+    d = Dict("x" => 1, "y" => Dict("z" => 2))
+    @test flatten(d, "_") == Dict("x" => 1, "y_z" => 2)
+
+    # test make any dict
+    d = Dict("x" => 1, "y" => Dict("z" => 2), "w" => [1, Dict("v" => :a)])
+    any_d = make_any_dict(d)
+    @test typeof(any_d) == Dict{Any,Any}
+    @test typeof(any_d["y"]) == Dict{Any,Any}
+    @test typeof(any_d["w"][2]) == Dict{Any,Any}
+    any_d["x"] = :a
+    @test any_d["x"] == :a
+
+    # test product_dict
+    d = Dict("x!" => [1, 2, 3])
+    @test product_dict(d) == d # without a key filter, should do nothing
+    k! = k -> last(k) == '!'
+    uk = k -> k[1:(end - 1)]
+    p = product_dict(d; key_filter=k!)
+    for i in 1:3
+        @test p[i] == Dict("x!" => i)
     end
-    # check special functions
-    function update_seed(dict)
-        dict["seed"] = get(dict, "seed", 0) + 1
-        return dict
-    end
-    orig = Dict("x!" => [1, 2, 3], "y!" => [4, 5, 6], "z" => 100, "a!" => [100, 200])
-    iterates = iterated_dict!(
-        orig, key -> last(key) == '!', key -> key[1:(end - 1)], update_seed
-    )
-    i = 1
-    for _ in iterates
-        @test orig["seed"] == i
-        i += 1
-    end
+
+    # test nested
+    d = Dict("x!" => [1, 2, 3], "y!" => [5, Dict("z!" => [:a, :b])])
+    p = product_dict(d; key_filter=k!)
+    @test length(p) == 9
+    @test p[1]["x!"] == 1
+    @test p[1]["y!"] == 5
+    @test p[end]["y!"]["z!"] == :b
+
+    # test key updates
+    d = Dict("x!" => [1, 2, 3], "y!" => [5, Dict("z!" => [:a, :b])])
+    p = product_dict(d; key_filter=k!, key_update=uk)
+    @test length(p) == 9
+    @test p[1]["x"] == 1
+    @test "x!" ∉ keys(p[1])
+    @test p[1]["y"] == 5
+    @test "y!" ∉ keys(p[1])
+    @test p[end]["y"]["z"] == :b
+    @test "z!" ∉ keys(p[end]["y"])
 end
