@@ -48,7 +48,10 @@ make_any_dict(any) = any
 # # Turns a dictionary with iterator keywords into a generator of dictionary without them
 product_dict(dict::AbstractDict; kwargs...) = last(_product(make_any_dict(dict); kwargs...))
 function _product(
-    dict::AbstractDict; key_filter::Function=k -> false, key_update::Function=k -> k
+    dict::AbstractDict;
+    key_filter::Function=k -> false,
+    key_update::Function=k -> k,
+    special_fns::Function=x -> x,
 )::Tuple{Bool,Any}
     old_keys = Any[]
     new_keys = Any[]
@@ -64,8 +67,10 @@ function _product(
         end
     end
     if !isempty(iterates)
-        return true,
-        [set!(deepcopy(dict), old_keys, new_keys, val) for val in product(iterates...)]
+        prod = product(iterates...)
+        prod_dict = [set!(deepcopy(dict), old_keys, new_keys, val) for val in prod]
+        prod_dict = special_fns.(prod_dict)
+        return true, prod_dict
     end
     return false, dict
 end

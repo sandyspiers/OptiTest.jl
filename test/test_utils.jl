@@ -46,4 +46,19 @@
     @test "y!" ∉ keys(p[1])
     @test p[end]["y"]["z"] == :b
     @test "z!" ∉ keys(p[end]["y"])
+
+    # test special functions
+    d = Dict("x!" => [1, 2, 3], "y!" => [5, Dict("z!" => [:a, :b])], "seed" => 0)
+    function update_seed(dict)
+        if "seed" ∈ keys(dict)
+            dict["seed"] += 1
+        end
+        return dict
+    end
+    prod = product_dict(d; key_filter=k!, key_update=uk, special_fns=update_seed)
+    s = 1
+    for p in prod
+        @test p["seed"] == s
+        s += 1
+    end
 end
