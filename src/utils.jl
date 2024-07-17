@@ -57,7 +57,9 @@ function _product(
     new_keys = Any[]
     iterates = Any[]
     for (key, val) in dict
-        iterable, sub_iterates = _product(val; key_filter=key_filter, key_update=key_update)
+        iterable, sub_iterates = _product(
+            val; key_filter=key_filter, key_update=key_update, special_fns=special_fns
+        )
         if iterable || key_filter(key)
             push!(old_keys, key)
             push!(new_keys, key_filter(key) ? key_update(key) : key)
@@ -67,9 +69,8 @@ function _product(
         end
     end
     if !isempty(iterates)
-        prod = product(iterates...)
-        prod_dict = [set!(deepcopy(dict), old_keys, new_keys, val) for val in prod]
-        prod_dict = special_fns.(prod_dict)
+        make_dict(val) = deepcopy(special_fns(set!(dict, old_keys, new_keys, val)))
+        prod_dict = map(make_dict, product(iterates...))
         return true, prod_dict
     end
     return false, dict
