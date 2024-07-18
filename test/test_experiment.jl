@@ -8,7 +8,7 @@
         end
 
         # simple experiment
-        ex = Dict("x!" => 1:9, "save" => "")
+        ex = Dict("x!" => 1:9, "save_results" => false)
 
         # check it runs without any workers (ie single threaded)
         rmprocs(workers())
@@ -33,12 +33,18 @@
             return dict
         end
         dir =
-            ex = Dict("x!" => 1:9, "name" => "test", "save" => "slr", "dir" => "test_write")
+            ex = Dict(
+                "x!" => 1:9,
+                "name" => "test",
+                "dir" => "test_write",
+                "save_setup" => true,
+                "save_log" => true,
+                "save_results" => true,
+            )
         run(ex, solve)
         files = readdir("test_write")
         @test "test.json" ∈ files
         @test "test.log" ∈ files
-        @test "test.err" ∈ files
         @test "test.csv" ∈ files
     end
 end
