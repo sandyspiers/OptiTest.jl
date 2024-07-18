@@ -9,7 +9,12 @@ function update_seed(dict)
 end
 
 function tests(experiment_dict::AbstractDict)
-    return product_dict(experiment_dict; key_filter=key_filter, key_update=key_update)
+    return product_dict(
+        experiment_dict;
+        key_filter=key_filter,
+        key_update=key_update,
+        special_fns=update_seed,
+    )
 end
 
 function run(experiment::AbstractDict, solver::Function)::DataFrame
