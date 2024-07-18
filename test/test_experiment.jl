@@ -8,7 +8,7 @@
         end
 
         # simple experiment
-        ex = Dict("x!" => 1:9)
+        ex = Dict("x!" => 1:9, "save" => "")
 
         # check it runs without any workers (ie single threaded)
         rmprocs(workers())
@@ -23,5 +23,22 @@
         @test length(df.id) == 9
         @test minimum(df.id) < maximum(df.id)
         rmprocs(workers())
+    end
+
+    @testset "helpers" begin
+        rmprocs(workers())
+        function solve(dict)
+            println("Hello I'm $(myid())")
+            dict["id"] = myid()
+            return dict
+        end
+        dir =
+            ex = Dict("x!" => 1:9, "name" => "test", "save" => "slr", "dir" => "test_write")
+        run(ex, solve)
+        files = readdir("test_write")
+        @test "test.json" ∈ files
+        @test "test.log" ∈ files
+        @test "test.err" ∈ files
+        @test "test.csv" ∈ files
     end
 end

@@ -2,7 +2,10 @@ module OptiTest
 
 import Base.Iterators: product
 using DataFrames: DataFrame
+using Dates: format, now
 using Distributed: pmap
+using CSV: write
+using JSON: print
 
 # # generic utility functions, include dictionary producting
 include("utils.jl")
