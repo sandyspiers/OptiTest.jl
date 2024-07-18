@@ -32,6 +32,7 @@
             dict["id"] = myid()
             return dict
         end
+        rm("test_write"; force=true, recursive=true)
         dir =
             ex = Dict(
                 "x!" => 1:9,
