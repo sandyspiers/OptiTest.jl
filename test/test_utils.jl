@@ -61,6 +61,7 @@
         @test p["seed"] == s
         s += 1
     end
+    # nested special fns
     d = Dict("ins!" => Dict("x!" => [1, 2, 3], "seed" => 0), "sol!" => [:g, :c])
     prod = product_dict(d; key_filter=k!, key_update=uk, special_fns=update_seed)
     @test prod[1]["ins"]["seed"] == 1
