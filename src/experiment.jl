@@ -1,4 +1,4 @@
-# some sane defaults
+# # some sane defaults
 key_filter(key) = last(key) == '!'
 key_update(key) = key[1:(end - 1)]
 function update_seed(dict)
@@ -8,28 +8,12 @@ function update_seed(dict)
     return dict
 end
 
-function tests!(experiment::Experiment)
-    return (
-        experiment for _ in product(
-            iterated_dict!(experiment.solver_params, key_filter, key_update),
-            iterated_dict!(experiment.instance_params, key_filter, key_update, update_seed),
-        )
-    )
+function tests(experiment_dict::AbstractDict)
+    return product_dict(experiment_dict; key_filter=key_filter, key_update=key_update)
 end
 
-function tests(experiment::Experiment)
-    return map(deepcopy, tests!(deepcopy(experiment)))
-end
-
-function _run(experiment::Experiment)::DataFrame
-    tsts = tests(experiment)
-    results = pmap(experiment.generic_solver, tsts)
-    all = (
-        Dict(
-            "instance" => test.instance_params,
-            "solver" => test.solver_params,
-            "result" => res,
-        ) for (test, res) in zip(tsts, results)
-    )
-    return DataFrame(vcat(flatten.(all)...))
+function run(experiment::AbstractDict, solver::Function)::DataFrame
+    results = pmap(solver, tests(experiment))
+    df = vcat(DataFrame.(results)...)
+    return df
 end

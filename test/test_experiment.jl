@@ -1,49 +1,27 @@
 @testset "experiments.jl" begin
-    # basic example
-    ex = Experiment(
-        "test",
-        (x...) -> println(x...),
-        rand,
-        Dict{Any,Any}("x!" => [10, 20, 30]),
-        Dict{Any,Any}("solver!" => ["cat", "dog"]),
-    )
-    tsts = tests!(ex)
-    @test length(tsts) == 6
-    @test first(tsts).instance_params["x"] == 10
-    @test last(tsts).solver_params["solver"] == "dog"
-    # test seed
-    ex = Experiment(
-        "test",
-        (x...) -> println(x...),
-        rand,
-        Dict{Any,Any}("x!" => [10, 20, 30], "seed" => 0),
-        Dict{Any,Any}("solver!" => ["cat", "dog", "monkey"], "tt!" => [1, 3]),
-    )
-    tsts = tests!(ex)
-    @test length(tsts) == 18
-    for t in tsts
+    @testset "distributed" begin
+        # sleeper helper fn
+        function sleep_id(test_dict)
+            sleep(0.25)
+            test_dict["id"] = myid()
+            return test_dict
+        end
+
+        # simple experiment
+        ex = Dict("x!" => 1:9)
+
+        # check it runs without any workers (ie single threaded)
+        rmprocs(workers())
+        df = run(ex, sleep_id)
+        @test length(df.id) == 9
+        @test all(df.id .== 1)
+
+        # add 3 workers
+        addprocs(3)
+        @everywhere import OptiTest
+        df = run(ex, sleep_id)
+        @test length(df.id) == 9
+        @test minimum(df.id) < maximum(df.id)
+        rmprocs(workers())
     end
-    @test ex.instance_params["seed"] == 3
-    # test expressions
-    ex = Experiment(
-        "test",
-        (x...) -> println(x...),
-        rand,
-        Dict{Any,Any}("x!" => [10, 20, 30], "s!" => 1:10),
-        Dict{Any,Any}("solver!" => ["cat", "dog", "monkey"], "tt!" => 1:5),
-    )
-    tsts = tests!(ex)
-    @test length(tsts) == 450
-    # test copy
-    ex = Experiment(
-        "test",
-        (x...) -> println(x...),
-        rand,
-        Dict{Any,Any}("x!" => [10, 20, 30], "seed" => 0),
-        Dict{Any,Any}("solver!" => ["cat", "dog", "monkey"], "tt!" => [1, 3]),
-    )
-    tsts = tests(ex)
-    @test length(tsts) == 18
-    @test tsts[1].instance_params["seed"] == 1
-    @test tsts[end].instance_params["seed"] == 3
 end
