@@ -36,6 +36,15 @@
     @test p[1]["y!"] == 5
     @test p[end]["y!"]["z!"] == :b
 
+    # test expressions
+    d = Dict("x!" => 1:3, "y!" => 5:7)
+    p = product_dict(d; key_filter=k!)
+    @test length(p) == 9
+    @test p[1]["x!"] == 1
+    @test p[1]["y!"] == 5
+    @test p[end]["x!"] == 3
+    @test p[end]["y!"] == 7
+
     # test key updates
     d = Dict("x!" => [1, 2, 3], "y!" => [5, Dict("z!" => [:a, :b])])
     p = product_dict(d; key_filter=k!, key_update=uk)
