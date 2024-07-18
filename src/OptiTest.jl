@@ -1,10 +1,10 @@
 module OptiTest
 
-import Base.Iterators: product
+using Base.Iterators: product
+using CSV: write
 using DataFrames: DataFrame
 using Dates: format, now
 using Distributed: pmap
-using CSV: write
 using JSON: print
 
 # # generic utility functions, include dictionary producting
