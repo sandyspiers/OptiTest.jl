@@ -1,17 +1,67 @@
+using Base: length_continued
 using DataFrames
+using Plots
+import Plots: plot, plot!
 using OptiTest: run
 
-struct PerformanceProfile
-    labels::AbstractDict
-    times::AbstractVecOrMat
-end
+# # # Actual code
 
-mutable struct PerformanceProfileData
+abstract type PlotData end
+
+struct PerformanceProfile <: PlotData
     max_time::Real
-    num_tests::Real
-    profiles::Vector{PerformanceProfile}
+    num_tests::Integer
+    labels::Vector{AbstractDict}
+    solve_times::Vector{Vector{Real}}
+    # some attributes
+    function PerformanceProfile(df, identifiers, solve_time)
+        max_time = maximum(df[!, solve_time])
+        num_tests = 0
+        labels = AbstractDict[]
+        solve_times = Vector[]
+        # for each group
+        for g in groupby(df, identifiers)
+            # get times and number of tests
+            times = sort(g[:, solve_time])
+            num_tests = max(num_tests, length(times))
+            # sort times
+            # add first and last step
+            pushfirst!(times, zero(first(times)))
+            push!(times, last(times))
+            # save time
+            push!(solve_times, times)
+            # save labels as dictionary
+            push!(
+                labels,
+                Dict(identifier => first(g[!, identifier]) for identifier in identifiers),
+            )
+        end
+        return new(max_time, num_tests, labels, solve_times)
+    end
+end
+function plot!(pp::PerformanceProfile, style_guide::AbstractDict)
+    for (label, times) in zip(pp.labels, pp.solve_times)
+        steps = vcat(0:(length(times) - 2), length(times) - 1)
+        plot!(steps, times; label="$label", seriestype=:steppost)
+    end
+    return nothing
 end
 
+function style_kwargs(plot_data::PlotData)::Dict
+    return nothing
+end
+
+empty_plot() = plot(1; label=nothing)
+function plot(plot_data::PlotData, style_guide::AbstractDict=Dict())
+    # create plot...
+    p = empty_plot()
+    # add plots...
+    plot!(plot_data, style_guide)
+    # return...
+    return p
+end
+
+# # # Test
 function random_solve_time(dict)
     if dict["speed"] == :slow
         dict["solve_time"] = rand() * 8
@@ -28,24 +78,7 @@ end
 experiment = Dict(
     "test!" => 1:100, "speed!" => [:slow, :medium, :fast], "motivation!" => [:low, :high]
 )
-
 df = run(experiment, random_solve_time)
 
-solve_time = :solve_time
-parameters = [:speed, :motivation]
-
-ppd = Dict{Any,Any}()
-ppd["max_time"] = maximum(df[!, solve_time])
-ppd["max_tests"] = 0
-
-for g in groupby(df, parameters)
-    # get times and number of tests
-    times = g[:, solve_time]
-    ppd["max_tests"] = max(ppd["max_tests"], length(times))
-    # add first and last step
-    pushfirst!(times, zero(first(times)))
-    push!(times, last(times))
-    # println(g)
-    println([(p => first(g[!, p])) for p in parameters], times)
-    println(Dict("times" => times, ((p => first(g[!, p])) for p in parameters)...))
-end
+pp = PerformanceProfile(df, [:speed, :motivation], :solve_time)
+plot(pp)
