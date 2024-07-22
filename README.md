@@ -8,7 +8,7 @@ A semi-automated toolkit to run large-scale, distributed numerical experiments o
 Includes several experiment-level helper functions, settings and setups used to run your tests.
 Experiments can be defined using an easy to read and reuse dictionary format.
 This allows experiments to be easily run in your Julia REPL, or run as a script on a server.
-The results are saved in a standardized format, and several analysis tools are included.
+The results are saved in a standardized format, and several analysis tools such as performance profiles are included.
 Style guides can be provided to produce semi-automated performance metrics with a standard formatting (such as colouring and labelling).
 
 ## Usage
@@ -24,9 +24,10 @@ test = Dict(
 )
 ```
 
-This test defines a knapsack instance of size 100, which should be solver by CPLEX.
-The user must then provide a generic solver function which can be used on dictionaries of this format.
-The results should then be appended to this dictionary and returned, for instance:
+This test defines a knapsack instance of size 100, which should be solved using CPLEX.
+The user must then provide a generic solver function which can be used on dictionaries of _this format_.
+This way, the user has full control of what goes in and out of the generic solver routine.
+The results should then be appended to the same dictionary and returned, for instance:
 
 ```julia
 function solve!(test::AbstractDict)::AbstractDict
@@ -45,13 +46,14 @@ using OptiTest: run
 df = run(test, solve!)
 ```
 
-Which will return a data farm with 5 columns (generator, n, ..., obj_val) and 1 row (from the one experiment).
+Which will return a data frame with 5 columns (generator, n, ..., obj_val) and 1 row (from the one experiment).
+(note that if the generic solver routine returns a nested dictionary, this is flattened so that it can be made into a dataframe).
 
 ### Repeatable Parameters
 
 The key part of this package is the ability to product over certain parameters to run many tests with different parameters.
 We achieve this by _producting_ over the dictionary.
-By default, this is achieved by suffixing a dictionary key by '!' and making use the element is a vector.
+By default, this is achieved by suffixing a dictionary key by '!' and where the associated element is either a dictionary or vector.
 This is then processed to return a dictionary without the '!', and with one of the elements in the vector.
 For instance:
 
@@ -117,19 +119,69 @@ This is one of several special keys discussed later.
 
 ### Parallel Tests
 
-When the user calls `run(experiment, solver)` the each experiment is run in parallel **by default** using the `Distributed` package.
-By default, it will use all avaliable workers.
+When the user calls `run(experiment, solver)` the each experiment is run in parallel **by default** using the `Distributed` package (note this can be turned off, see [special keywords](#special-keywords-and-functions))
+By default, it will use all available workers.
 It is therefore the users responsibility to populate as many or as few workers they need for the experiment.
 This may seem annoying, but it allows for warmstarting, precompling, image building (maybe?) and remote workers.
 
-### Post Experiment Analysis
+### Post Experiment Analysis and Style Guides
 
-todo
+We provide several ploters and dataframe summaries that can now be automated.
+More information on each plot type can be found [in the docs](docs/ploters.md)
+Below is an example of a performance profile.
+To produce a plot, we simply call `plot` on the constructor of the plot type, in this case `PerformanceProfile`.
+A performance profile needs the dataframe, column of identifiers and solve time column.
+For each unique combo of elements in the identifier columns, a performance is plotted.
+
+```julia
+using OptiTest: run, plot
+# test how speed and motivation levels improve solve times
+experiment = Dict(
+    "size!" => 1:100,
+    "speed!" => [:slow, :medium, :fast],
+    "motivation!" => [:low, :high],
+)
+df = run(experiment, generic_solver!)
+# for each unique combo of speed, motivate
+identifiers = [:speed, :motivation]
+# measure solve time
+solve_time = :solve_time
+plot(PerformanceProfile(df, identifiers, solve_time))
+```
+
+When we have multiple identifiers, it can be helpful to provide a style guide.
+This is a (potentially nested) dictionary that maps a pair of identifier column to value, and then the keyword arguments to provide to the plotting routine.
+An example is shown below.
+
+```julia
+style_guide = Dict(
+    (:speed => :fast) => Dict(:color => "red"),
+    (:speed => :medium) => Dict(:color => "blue"),
+    (:speed => :slow) => Dict(:color => "purple"),
+    (:motivation => :low) => Dict(:linestyle => :dash),
+)
+```
+
+For more, see [the other examples](/docs/examples.md).
 
 ### Special Keywords and Functions
 
-todo
+We provide the following special keywords that change the main experimenter function.
+Note these must be in the top level of the experiment dictionary.
+(note these are prone to change with new updates).
+
+| keyword | default | Usage |
+| ------ | ------- | ----- |
+| name | `optitest_YYYY-MM-DD:HHMM` | Sets the name of the experiment |
+| dir | "." | Directory for all save and log files |
+| save_setup | false | Whether to save the experiment setup as a JSON file |
+| save_log | false | Whether to log output to a file |
+| save_results | true | Whether to save the results to a CSV file |
+
+There are also some special keywords for the style guide.
+For instance, for performance profiles you can provide a label generating. function.
+These are mostly plot-specific, so for more info see [the docs](/docs/ploters.md).
 
 ### Suggested Usage
 
-todo
+For more detailed examples, see [here](docs/examples.md)
