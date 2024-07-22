@@ -61,10 +61,10 @@ function run(experiment::AbstractDict, solver::Function)::DataFrame
     end
 
     # create df
-    df = vcat(DataFrame.(results)...)
+    df = vcat(DataFrame.(flatten.(results))...)
 
     # save df?
-    if save_setup(ex)
+    if save_results(ex)
         write(results_file(ex), df)
     end
     return df
