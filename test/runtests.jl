@@ -1,13 +1,11 @@
-using OptiTest: SYMBOL_NAMES, ITERATE_NAMES
-using OptiTest: AnyDict
-using OptiTest: nested_keys, nested_get, nested_set!
-using OptiTest: parse_symbols!, parse_iterates!, parse_experiment!
+using Distributed: addprocs, myid, @everywhere, rmprocs, workers
+using DataFrames: nrow
+using OptiTest: set!, flatten, make_any_dict, product_dict
+using OptiTest: run
+using OptiTest: PLOT_TYPES, plot, style_kwargs
 using Test
-using Aqua
 
 include("test_utils.jl")
-include("test_dict.jl")
-
-# @testset "Code quality (Aqua.jl)" begin
-#     Aqua.test_all(OptiTest)
-# end
+include("test_experiment.jl")
+include("test_plots.jl")
+include("test_examples.jl")

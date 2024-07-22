@@ -1,100 +1,84 @@
-# # General useful utility functions
-
-"""
-    all_but_last(iterable)
-
-Takes an iterable and returns the set [first,last) element.
-I.e., if the iterble is only of lenth one, it will still return
-the first element
-"""
-function all_but_last(iterable)
-    return iterable[1:max(1, end - 1)]
+# # Takes an iterable of (key,value) and sets each in Dict
+function set!(dict::AbstractDict, key, val)
+    dict[key] = val
+    return dict
 end
-
-"""
-    nested_keys(dict)
-
-Takes a potentially nested dictionary, and returns a vector of tuples
-giving the nested keys.
-Warning: Will fail if some of the dictionaries keys are already tuples.
-
-```julia
-julia> d = Dict("aa" => 1, "bb" => Dict("xx" => 2, "yy" => Dict("gg"=>3,"hh"=>4)))
-Dict{String, Any} with 2 entries:
-  "bb" => Dict{String, Any}("xx"=>2, "yy"=>Dict("hh"=>4, "gg"=>3))
-  "aa" => 1
-
-julia> nested_keys(d)
-4-element Vector{Tuple{String, Vararg{String}}}:
- ("bb", "xx")
- ("bb", "yy", "hh")
- ("bb", "yy", "gg")
- ("aa",)
-```
-"""
-nested_keys(dict) = _nested_keys(dict, ())
-function _nested_keys(dict, parent)
-    if typeof(dict) <: AbstractDict
-        sub_keys = (_nested_keys(sd, (parent..., sk)) for (sk, sd) in dict)
-        return typeof(sub_keys) <: Tuple ? sub_keys : vcat(sub_keys...)
-    end
-    return (parent)
-end
-
-"""
-    nested_get(dict::AbstractDict, key, fallback=nothing)
-
-Gets the element inside a potentially nested dictionary, where `key`
-defines the tuple-key.
-
-```julia
-julia> d = Dict("aa" => 1, "bb" => Dict("xx" => 2, "yy" => Dict("gg"=>3,"hh"=>4)))
-Dict{String, Any} with 2 entries:
-  "bb" => Dict{String, Any}("xx"=>2, "yy"=>Dict("hh"=>4, "gg"=>3))
-  "aa" => 1
-
-julia> nested_get(d,("bb","yy"))
-Dict{String, Int64} with 2 entries:
-  "hh" => 4
-  "gg" => 3
-
-julia> nested_get(d,"aa")
-1
-```
-"""
-function nested_get(dict::AbstractDict, key, fallback=nothing)
-    if key ∈ keys(dict)
-        return get(dict, key, fallback)
-    end
-    return reduce((dict, key) -> get(dict, key, fallback), key; init=dict)
-end
-
-"""
-    nested_set!(dict::AbstractDict, key, val)::AbstractDict
-
-
-Sets the element inside a potentially nested dictionary, where `key`
-defines the tuple-key.
-```julia
-julia> d = Dict("aa" => 1, "bb" => Dict("xx" => 2, "yy" => Dict("gg"=>3,"hh"=>4)))
-Dict{String, Any} with 2 entries:
-  "bb" => Dict{String, Any}("xx"=>2, "yy"=>Dict("hh"=>4, "gg"=>3))
-  "aa" => 1
-
-julia> nested_set!(d,("bb","xx"),6)
-Dict{String, Any} with 2 entries:
-  "bb" => Dict{String, Any}("xx"=>6, "yy"=>Dict("hh"=>4, "gg"=>3))
-  "aa" => 1
-```
-"""
-function nested_set!(dict::AbstractDict, key, val)::AbstractDict
-    if key ∈ keys(dict)
+function set!(dict::AbstractDict, keys::AbstractVector, vals::AbstractVector)::AbstractDict
+    for (key, val) in zip(keys, vals)
         dict[key] = val
-    elseif length(key) == 1
-        dict[first(key)] = val
-    else
-        sub_dict = nested_get(dict, all_but_last(key))
-        sub_dict[last(key)] = val
     end
     return dict
+end
+function set!(
+    dict::AbstractDict, old_keys::AbstractVector, new_keys::AbstractVector, vals
+)::AbstractDict
+    for (old, new, val) in zip(old_keys, new_keys, vals)
+        delete!(dict, old)
+        dict[new] = val
+    end
+    return dict
+end
+
+# # flatten a nested dictionary
+function flatten(dict::AbstractDict, delim::String="_")::AbstractDict
+    d = empty(dict)
+    for (key, val) in dict
+        if typeof(val) <: AbstractDict
+            for (k, v) in flatten(val, delim)
+                d[key * delim * k] = v
+            end
+        else
+            d[key] = val
+        end
+    end
+    return d
+end
+
+# # make a dictionary into an any dictionary
+function make_any_dict(dict::AbstractDict)::Dict{Any,Any}
+    any_dict = Dict{Any,Any}()
+    for (key, val) in dict
+        any_dict[key] = make_any_dict(val)
+    end
+    return any_dict
+end
+make_any_dict(vec::AbstractVecOrMat) = [make_any_dict(v) for v in vec]
+make_any_dict(any) = any
+
+# # Turns a dictionary with iterator keywords into a generator of dictionary without them
+product_dict(dict::AbstractDict; kwargs...) = last(_product(make_any_dict(dict); kwargs...))
+function _product(
+    dict::AbstractDict;
+    key_filter::Function=k -> false,
+    key_update::Function=k -> k,
+    special_fns::Function=x -> x,
+)::Tuple{Bool,Any}
+    old_keys = Any[]
+    new_keys = Any[]
+    iterates = Any[]
+    for (key, val) in dict
+        iterable, sub_iterates = _product(
+            val; key_filter=key_filter, key_update=key_update, special_fns=special_fns
+        )
+        if iterable || key_filter(key)
+            push!(old_keys, key)
+            push!(new_keys, key_filter(key) ? key_update(key) : key)
+            sub_iterates =
+                isa(sub_iterates, AbstractVecOrMat) ? vcat(sub_iterates...) : sub_iterates
+            push!(iterates, sub_iterates)
+        end
+    end
+    if !isempty(iterates)
+        make_dict(val) = deepcopy(special_fns(set!(dict, old_keys, new_keys, val)))
+        prod_dict = map(make_dict, product(iterates...))
+        return true, prod_dict
+    end
+    return false, dict
+end
+function _product(vec::AbstractVecOrMat; kwargs...)::Tuple{Bool,Any}
+    sub_iterables = [_product(val; kwargs...) for val in vec]
+    return any(first.(sub_iterables)), last.(sub_iterables)
+end
+function _product(any; _...)::Tuple{Bool,Any}
+    return false, any
 end
