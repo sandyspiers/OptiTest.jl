@@ -16,7 +16,7 @@ struct PerformanceProfile <: PlotData
             num_tests = max(num_tests, length(times))
             # add first and last step
             pushfirst!(times, zero(first(times)))
-            push!(times, last(times))
+            push!(times, max_time)
             # save time
             push!(solve_times, times)
             # save labels as vector of pairs
@@ -30,8 +30,22 @@ struct PerformanceProfile <: PlotData
 end
 function plot!(pp::PerformanceProfile, style_guide::AbstractDict)
     for (label, times) in zip(pp.identifiers, pp.solve_times)
-        steps = vcat(0:(length(times) - 2), length(times) - 1)
-        plot!(steps, times; seriestype=:steppost, style_kwargs(label, style_guide)...)
+        steps = vcat(0:(length(times) - 2), length(times) - 2)
+        sg = style_kwargs(label, style_guide)
+        sg[:label] = get(sg, :label, "$(last.(label))")
+        plot!(times, steps; seriestype=:steppost, sg...)
     end
+    # add max test line
+    hline!(
+        [pp.num_tests];
+        color=:grey,
+        linestyle=:dot,
+        title="Performance Profile",
+        ylabel="Num Tests Solved",
+        xlabel="Solve Time",
+        ylims=(0, pp.num_tests * 1.025),
+        xlims=(0, pp.max_time),
+        label=nothing,
+    )
     return nothing
 end

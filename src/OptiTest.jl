@@ -1,6 +1,6 @@
 module OptiTest
 
-import Plots: plot, plot!
+import Plots: plot, plot!, hline!
 
 using Base.Iterators: product
 using CSV: write
