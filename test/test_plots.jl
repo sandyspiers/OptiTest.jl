@@ -49,6 +49,7 @@
         "test!" => 1:100,
         "speed!" => [:slow, :medium, :fast],
         "motivation!" => [:low, :high],
+        "save_results" => false,
     )
     df = run(experiment, random_solve_time)
     @test nrow(df) == 600

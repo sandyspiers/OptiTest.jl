@@ -46,7 +46,3 @@ style_guide = Dict(
 identifiers = [:speed, :wellbeing_motivation, :wellbeing_happiness]
 solve_time = :solve_time
 plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)
-plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)
-plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)
-plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)
-plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)

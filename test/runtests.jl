@@ -8,3 +8,4 @@ using Test
 include("test_utils.jl")
 include("test_experiment.jl")
 include("test_plots.jl")
+include("test_examples.jl")
