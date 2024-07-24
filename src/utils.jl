@@ -76,8 +76,15 @@ function _product(
     return false, dict
 end
 function _product(vec::AbstractVecOrMat; kwargs...)::Tuple{Bool,Any}
-    sub_iterables = [_product(val; kwargs...) for val in vec]
-    return any(first.(sub_iterables)), last.(sub_iterables)
+    iterate = false
+    iterates = Any[]
+    for (iterable, sub_iterates) in _product.(vec; kwargs...)
+        iterate = iterable ? true : iterate
+        sub_iterates =
+            isa(sub_iterates, AbstractVecOrMat) ? vcat(sub_iterates...) : sub_iterates
+        push!(iterates, sub_iterates)
+    end
+    return iterate, iterates
 end
 function _product(any; _...)::Tuple{Bool,Any}
     return false, any

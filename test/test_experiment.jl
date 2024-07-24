@@ -23,6 +23,13 @@
         @test length(df.id) == 9
         @test minimum(df.id) < maximum(df.id)
         rmprocs(workers())
+
+        # test it works for singles
+        rmprocs(workers())
+        ex = Dict("x" => 9, "save_results" => false)
+        df = run(ex, sleep_id)
+        @test length(df.id) == 1
+        @test all(df.id .== 1)
     end
 
     @testset "helpers" begin

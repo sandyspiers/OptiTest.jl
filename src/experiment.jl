@@ -20,12 +20,16 @@ function tests(experiment_dict::AbstractDict)
     key_filter = get(experiment_dict, "key_filter", key!)
     key_update = get(experiment_dict, "key_update", rm!)
     special_fns = get(experiment_dict, "special_fns", update_seed)
-    return product_dict(
+    pd = product_dict(
         experiment_dict;
         key_filter=key_filter,
         key_update=key_update,
         special_fns=special_fns,
     )
+    if isa(pd, AbstractDict)
+        return [pd]
+    end
+    return pd
 end
 
 # # redirect stdout and stderr
