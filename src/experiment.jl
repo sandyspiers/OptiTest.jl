@@ -56,14 +56,26 @@ function run(experiment::AbstractDict, solver::Function)::DataFrame
     end
 
     # capture output?
-    @everywhere Main.eval(using ProgressMeter: ProgressMeter)
+    if in("ProgressMeter", keys(installed()))
+        @everywhere Main.eval(using ProgressMeter: ProgressMeter)
 
-    if save_log(ex)
-        results = redirect_logs(log_file(ex)) do
-            @showprogress pmap(solver, tests(ex))
+        if save_log(ex)
+            results = redirect_logs(log_file(ex)) do
+                @showprogress pmap(solver, tests(ex))
+            end
+        else
+            results = @showprogress pmap(solver, tests(ex))
         end
     else
-        results = @showprogress pmap(solver, tests(ex))
+        @info "Install ProgressMeter to use"
+
+        if save_log(ex)
+            results = redirect_logs(log_file(ex)) do
+                pmap(solver, tests(ex))
+            end
+        else
+            results = pmap(solver, tests(ex))
+        end
     end
 
     # create df

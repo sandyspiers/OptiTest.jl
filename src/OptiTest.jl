@@ -9,6 +9,7 @@ using Dates: format, now
 using Distributed: pmap, @everywhere
 using JSON: print
 using ProgressMeter: @showprogress
+using Pkg: installed
 
 # # generic utility functions, include dictionary producting
 include("utils.jl")
