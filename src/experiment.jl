@@ -58,10 +58,10 @@ function run(experiment::AbstractDict, solver::Function)::DataFrame
     # capture output?
     if save_log(ex)
         results = redirect_logs(log_file(ex)) do
-            pmap(solver, tests(ex))
+            @showprogress pmap(solver, tests(ex))
         end
     else
-        results = pmap(solver, tests(ex))
+        results = @showprogress pmap(solver, tests(ex))
     end
 
     # create df

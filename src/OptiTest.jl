@@ -8,6 +8,7 @@ using DataFrames: DataFrame, groupby
 using Dates: format, now
 using Distributed: pmap
 using JSON: print
+using ProgressMeter: @showprogress
 
 # # generic utility functions, include dictionary producting
 include("utils.jl")
