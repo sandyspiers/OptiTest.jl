@@ -56,6 +56,8 @@ function run(experiment::AbstractDict, solver::Function)::DataFrame
     end
 
     # capture output?
+    @everywhere Main.eval(using ProgressMeter: ProgressMeter)
+
     if save_log(ex)
         results = redirect_logs(log_file(ex)) do
             @showprogress pmap(solver, tests(ex))

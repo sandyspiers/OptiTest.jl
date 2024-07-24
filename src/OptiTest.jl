@@ -6,7 +6,7 @@ using Base.Iterators: product
 using CSV: write
 using DataFrames: DataFrame, groupby
 using Dates: format, now
-using Distributed: pmap
+using Distributed: pmap, @everywhere
 using JSON: print
 using ProgressMeter: @showprogress
 
