@@ -29,8 +29,12 @@ end
 struct BlindIterable <: AbstractIterable
     iterate
 end
+struct Seed <: AbstractIterable
+    seed::Integer
+end
 _iterate(any) = [any]
 _iterate(rng::AbstractRange) = rng
+_iterate(seed::Seed) = seed.seed
 _iterate(iter::AbstractIterable) = _iterate(getfield(iter, :iterate))
 _iterate(nt::Vector) = collect(Iterators.flatten(_iterate.(nt)))
 function _iterate(nt::NamedTuple)
@@ -38,6 +42,13 @@ function _iterate(nt::NamedTuple)
     blinds = (k for (k, v) in iterators if v isa BlindIterable)
     names = first.(iterators)
     prods = Iterators.product(_iterate.(last.(iterators))...)
+    seed_idx = findfirst(t -> isa(t, Seed), last.(iterators))
+    @info seed_idx
+    if !isnothing(seed_idx)
+        for p in prods
+            p[seed_idx] += 1
+        end
+    end
     return [_copy_overwrite_flatten(nt, names, prod, blinds) for prod in prods]
 end
 
@@ -100,6 +111,7 @@ ex = Experiment(;#
     x=Iterable([1, 2, Iterable(100:101)]),
     y=Iterable(5:8),
     z=100,
+    s=Seed(0),
     backend=BlindIterable([#
         (solver=:cplex, aggression=Iterable([:little, :lot])),
         (solver=:gurobi, aggresssion=nothing),
@@ -109,4 +121,4 @@ test = tests_in(ex)
 for t in test
     t.solve_time = rand()
 end
-map(comma_line, test)
+map(println, test)
