@@ -58,6 +58,7 @@ Base.iterate(ex::Experiment, state) = iterate(zip(keys(ex), values(ex)), state)
 
 # # Test
 struct Test
+    # this is all the information
     _nt::NamedTuple
     # make this a hidden mutable that users can iteract with
     _res::Dict{Symbol,Any}
@@ -77,6 +78,18 @@ Base.values(test::Test) = Tuple(getproperty(test, k) for k in keys(test))
 Base.NamedTuple(test::Test) = NamedTuple{keys(test)}(values(test))
 Base.Tuple(test::Test) = values(test)
 Base.show(io::IO, test::Test) = print(io, "Test", NamedTuple(test))
+function safe_get(test::Test, key)
+    try
+        return getproperty(test, key)
+    catch
+        return nothing
+    end
+end
+function comma_line(test::Test)
+    return reduce(
+        (ln, key) -> ln * string(safe_get(test, key)) * ", ", keys(test); init=""
+    )[1:(end - 2)]
+end
 
 # # Iterator
 function tests_in(ex::Experiment)
@@ -96,4 +109,4 @@ test = tests_in(ex)
 for t in test
     t.solve_time = rand()
 end
-map(println, test)
+map(comma_line, test)
