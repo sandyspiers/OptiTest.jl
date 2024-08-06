@@ -3,9 +3,14 @@
 
 # # Test
 @MutableTypedNamedTuple Test
-
 function tests(ex::Experiment)
     return [Test(nt) for nt in _iterate(NamedTuple(ex))]
+end
+
+# # Runner
+function run(ex::Experiment, solver::Function)
+    results = pmap(solver, tests(ex))
+    return results
 end
 
 # # Specials
@@ -41,7 +46,6 @@ function _iterate(nt::NamedTuple)
     seed_fn(k, v) = v isa Seed ? v.seed_ref[] += 1 : v
     iterates = (apply(iter, seed_fn) for iter in iterates)
 
-    # flatten
     flat = (k for (k, v) in iter_pairs if v isa FlattenIterable)
     iterates = (flatten(iter, flat) for iter in iterates)
 

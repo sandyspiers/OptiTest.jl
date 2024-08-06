@@ -1,15 +1,15 @@
 module OptiTest
 
-import Plots: plot, plot!, hline!
+# import Plots: plot, plot!, hline!
 
 using NamedTupleTools: merge, split
 using TypedNamedTuples: @TypedNamedTuple, @MutableTypedNamedTuple
 
-# # generic utility functions, include dictionary producting
+# # generic utility functions
 include("utils.jl")
 
-# # experimental functions, including special functions and keywords
-# # special names and sane defaults
+# # setup for running experiments
+# # including special iterables and sane defaults
 include("experiment.jl")
 
 # # the generic semi-abstract procedure for producing plots
