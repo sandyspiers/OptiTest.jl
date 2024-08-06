@@ -1,22 +1,27 @@
 # # Utils
-function _copy_overwrite_flatten(nt::NamedTuple, keys, values, flatten)
-    return _copy_overwrite_flatten(nt, NamedTuple(zip(keys, values)), flatten)
+function _copy_overwrite(nt::NamedTuple, keys, values)::NamedTuple
+    return _copy_overwrite(nt, NamedTuple(zip(keys, values)))
 end
-function _copy_overwrite_flatten(nt::NamedTuple, overwrite::NamedTuple, flatten)
+function _copy_overwrite(nt::NamedTuple, overwrite::NamedTuple)::NamedTuple
+    return NamedTuple((
+        k => k ∈ keys(overwrite) ? getfield(overwrite, k) : getfield(nt, k) for
+        k in keys(nt)
+    ))
+end
+function _copy_flatten(nt::NamedTuple, flatten)::NamedTuple
     _nt = Tuple{Symbol,Any}[]
     for key in keys(nt)
-        if key in flatten && key in keys(overwrite)
-            sub_nt = getfield(overwrite, key)
+        if key in flatten && getfield(nt, key) isa NamedTuple
+            sub_nt = getfield(nt, key)
             push!(_nt, ((_key, getfield(sub_nt, _key)) for _key in keys(sub_nt))...)
         else
-            if key in keys(overwrite)
-                push!(_nt, (key, getfield(overwrite, key)))
-            else
-                push!(_nt, (key, getfield(nt, key)))
-            end
+            push!(_nt, (key, getfield(nt, key)))
         end
     end
     return NamedTuple(_nt)
+end
+function _copy_apply(nt::NamedTuple, fn::Function)::NamedTuple
+    return NamedTuple((k => fn(k, v) for (k, v) in zip(keys(nt), values(nt))))
 end
 
 # # Iterable
@@ -26,30 +31,36 @@ abstract type AbstractIterable end
 struct Iterable <: AbstractIterable
     iterate
 end
-struct BlindIterable <: AbstractIterable
+struct FlattenIterable <: AbstractIterable
     iterate
 end
-struct Seed <: AbstractIterable
+struct Seed
     seed::Integer
+    seed_ref::Ref{<:Integer}
+    Seed(seed) = new(seed, Ref(seed))
 end
-_iterate(any) = [any]
-_iterate(rng::AbstractRange) = rng
-_iterate(seed::Seed) = seed.seed
+_iterate(any) = any
 _iterate(iter::AbstractIterable) = _iterate(getfield(iter, :iterate))
-_iterate(nt::Vector) = collect(Iterators.flatten(_iterate.(nt)))
+_iterate(nt::Vector) = vcat(_iterate.(nt)...)
 function _iterate(nt::NamedTuple)
-    iterators = ((k, v) for (k, v) in zip(keys(nt), values(nt)) if v isa AbstractIterable)
-    blinds = (k for (k, v) in iterators if v isa BlindIterable)
-    names = first.(iterators)
-    prods = Iterators.product(_iterate.(last.(iterators))...)
-    seed_idx = findfirst(t -> isa(t, Seed), last.(iterators))
-    @info seed_idx
-    if !isnothing(seed_idx)
-        for p in prods
-            p[seed_idx] += 1
-        end
+    iterator_pairs = (
+        (k, v) for (k, v) in zip(keys(nt), values(nt)) if v isa AbstractIterable
+    )
+    if iterator_pairs == ()
+        return nt
     end
-    return [_copy_overwrite_flatten(nt, names, prod, blinds) for prod in prods]
+    names, iterates = (first.(iterator_pairs), last.(iterator_pairs))
+    prods = Iterators.product(_iterate.(iterates)...)
+    iterates = (_copy_overwrite(nt, names, prod) for prod in prods)
+
+    # specials
+    seed_fn(k, v) = v isa Seed ? v.seed_ref[] += 1 : v
+    iterates = (_copy_apply(iter, seed_fn) for iter in iterates)
+
+    flatten = (k for (k, v) in iterator_pairs if v isa FlattenIterable)
+    iterates = (_copy_flatten(iter, flatten) for iter in iterates)
+
+    return collect(iterates)
 end
 
 # # Experiment
@@ -108,11 +119,13 @@ function tests_in(ex::Experiment)
 end
 
 ex = Experiment(;#
-    x=Iterable([1, 2, Iterable(100:101)]),
-    y=Iterable(5:8),
-    z=100,
-    s=Seed(0),
-    backend=BlindIterable([#
+    instances=FlattenIterable((#
+        x=Iterable([1, Iterable(100:101)]),
+        y=Iterable(5:6),
+        z=100,
+        s=Seed(0),
+    )),
+    backend=FlattenIterable([#
         (solver=:cplex, aggression=Iterable([:little, :lot])),
         (solver=:gurobi, aggresssion=nothing),
     ]),
