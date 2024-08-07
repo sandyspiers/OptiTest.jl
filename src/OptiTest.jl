@@ -1,9 +1,12 @@
 module OptiTest
 
 import DataFrames: DataFrame
+import Plots: plot, plot!
 
+using DataFrames: groupby
 using Distributed: pmap
 using NamedTupleTools: merge, split
+using Plots: hline!
 using TypedNamedTuples: @MutableTypedNamedTuple, @TypedNamedTuple
 
 # # generic utility functions
@@ -13,11 +16,8 @@ include("utils.jl")
 # # including special iterables and sane defaults
 include("experiment.jl")
 
-# # the generic semi-abstract procedure for producing plots
-# include("ploter.jl")
-
 # # a list of predefined plots and performance profiles
-# include("plots.jl")
-# const PLOT_TYPES = [PerformanceProfile]
+include("plots.jl")
+const PLOT_TYPES = [PerformanceProfile]
 
 end

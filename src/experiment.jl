@@ -14,6 +14,9 @@ function run(ex::Experiment, solver::Function)
 end
 
 # # Dataframe
+function DataFrame(test::Array{Test})
+    return DataFrame(vcat(test...))
+end
 function DataFrame(test::Matrix{Test})
     return DataFrame(vcat(test...))
 end

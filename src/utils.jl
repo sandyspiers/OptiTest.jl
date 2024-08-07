@@ -14,3 +14,13 @@ end
 function apply(nt::NamedTuple, fn::Function)::NamedTuple
     return NamedTuple((k => fn(k, v) for (k, v) in key_vals(nt)))
 end
+
+function pair_get(pairs, key, default=nothing)
+    isnothing(pairs) && return default
+    idx = findfirst(pair -> first(pair) == key, pairs)
+    return isnothing(idx) ? default : last(pairs[idx])
+end
+
+function pair_get(pairs, pair::Pair, default=nothing)
+    return pair_get(pair_get(pairs, first(pair)), last(pair), default)
+end

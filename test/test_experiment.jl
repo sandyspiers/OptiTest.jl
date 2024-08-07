@@ -68,13 +68,14 @@
             t.id = myid()
             return t
         end
-        rmprocs(workers())
+        if length(workers()) > 1
+            rmprocs(workers())
+        end
         results = run(ex, rand_run)
         @test all(r.solve_time > 0 for r in results)
         @test all(r.id == 1 for r in results)
 
         # multiple workers
-        rmprocs(workers())
         addprocs(10)
         @everywhere import OptiTest
         results = run(ex, rand_run)
@@ -82,9 +83,6 @@
         @test minimum(r.id for r in results) < maximum(r.id for r in results)
     end
     @testset "dataframe" begin
-        rmprocs(workers())
-        addprocs(10)
-        @everywhere import OptiTest
         # compliant df
         ex = Experiment(;#
             a=FlattenIterable((#
@@ -108,8 +106,7 @@
         # noncomplain df
         function rand_run_flacky(t)
             t.solve_time = rand()
-            t.id = myid()
-            if iseven(myid())
+            if rand() > 0.5
                 t.flacky = :hello
             end
             return t

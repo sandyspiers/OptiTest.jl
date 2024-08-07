@@ -1,62 +1,61 @@
 @testset "ploter.jl" begin
-    # test style guide getters
-    sg = Dict(
-        (:s => :a) => Dict(:l => "a"),
-        (:s => :b) => Dict(:l => "b"),
-        (:t => :c) => Dict(:m => "c"),
-    )
-    @test style_kwargs((:s => :a), sg) == Dict(:l => "a")
-    @test style_kwargs((:s => :b), sg) == Dict(:l => "b")
-    @test style_kwargs((:t => :c), sg) == Dict(:m => "c")
-    @test style_kwargs([(:s => :a), (:t => :c)], sg) == Dict(:l => "a", :m => "c")
-    sg = Dict(
-        (:s => :a) => Dict(:l => "a"),
-        (:s => :b) => Dict(:l => "b"),
-        (:t => :c) => Dict(:m => "c", (:s => :a) => Dict(:l => "overwrite!")),
-    )
-    @test style_kwargs((:s => :a), sg) == Dict(:l => "a")
-    @test style_kwargs((:t => :c), sg) == Dict(:m => "c")
-    @test style_kwargs([(:s => :a), (:t => :c)], sg) == Dict(:l => "overwrite!", :m => "c")
-    sg = Dict(
-        (:s => :a) => Dict(:l => "a"),
-        (:s => :b) => Dict(:l => "b"),
-        (:t => :c) => Dict(
-            :m => "c",
-            (:s => :a) =>
-                Dict(:l => "overwrite!", (:s => :a) => Dict(:l => "doubleoverwrite!!")),
-        ),
-    )
-    @test style_kwargs((:s => :a), sg) == Dict(:l => "a")
-    @test style_kwargs((:t => :c), sg) == Dict(:m => "c")
-    @test style_kwargs([(:s => :a), (:t => :c)], sg) ==
-        Dict(:l => "doubleoverwrite!!", :m => "c")
+    @testset "styleguide" begin
+        sg = (#
+            :a => (#
+                :x => (col=:blue,),
+                :y => (col=:red,),
+            ),
+            :b => (#
+                1 => (ms=:star,),
+                2 => (ms=:cir,),
+            ),
+        )
+        @test style(:a => :x) == NamedTuple()
 
-    # basic test to see each one runs
-    function random_solve_time(dict)
-        if dict["speed"] == :slow
-            dict["solve_time"] = rand() * 8
-        elseif dict["speed"] == :medium
-            dict["solve_time"] = rand() * 5
-        elseif dict["speed"] == :fast
-            dict["solve_time"] = rand() * 3
-        else
-            dict["solve_time"] = 0
-        end
-        return dict
+        @test style(:a => :x; guide=sg) == (col=:blue,)
+        @test style(:a => :y; guide=sg) == (col=:red,)
+        @test style(:b => :1; guide=sg) == (ms=:star,)
+        @test style(:b => :2; guide=sg) == (ms=:cir,)
+
+        @test style(:a => :x, :b => :none; guide=sg) == (col=:blue,)
+        @test style(:a => :none, :b => 1; guide=sg) == (ms=:star,)
+
+        @test style(:a => :x, :b => 1; guide=sg) == (col=:blue, ms=:star)
+        @test style(:a => :y, :b => 2; guide=sg) == (col=:red, ms=:cir)
     end
+    @testset "plots" begin
+        # # Setup
+        ex = Experiment(;#
+            x=Iterable(1:10),
+            y=Iterable([:a, :b]),
+            z=Iterable([:happy, :sad]),
+        )
+        function rand_solve_time(t)
+            t.solve_time = rand()
+            return t
+        end
+        sg = (#
+            :x => (#
+                :1 => (color=:blue,),
+                :2 => (color=:red,),
+            ),
+            :y => (#
+                :a => (markershape=:star5,),
+                :b => (markershape=:circle,),
+            ),
+        )
+        results = run(ex, rand_solve_time)
+        df = DataFrame(results)
+        # # Performance profiler
+        @test PerformanceProfile in PLOT_TYPES
+        @test nrow(df) == 40
 
-    experiment = Dict(
-        "test!" => 1:100,
-        "speed!" => [:slow, :medium, :fast],
-        "motivation!" => [:low, :high],
-        "save_results" => false,
-    )
-    df = run(experiment, random_solve_time)
-    @test nrow(df) == 600
-    identifiers = [:speed, :motivation]
-    solve_time = :solve_time
-    for plot_type in PLOT_TYPES
-        plot(plot_type(df, identifiers, solve_time))
-        @test true
+        pp = PerformanceProfile(df, :y, :solve_time)
+        @test plot(pp) isa Plot
+        @test plot(pp; style_guide=sg) isa Plot
+
+        pp = PerformanceProfile(df, [:y, :z], :solve_time)
+        @test plot(pp) isa Plot
+        @test plot(pp; style_guide=sg) isa Plot
     end
 end
