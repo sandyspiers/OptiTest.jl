@@ -1,16 +1,16 @@
 # A small example usage to see if motivation improves random run times.
-using OptiTest: Experiment, Iterable, DataFrame
-using OptiTest: run, plot
-using OptiTest: PerformanceProfile
+using OptiTester: OptiTest, Iterable
+using OptiTester: run, plot
+using OptiTester: DataFrame, PerformanceProfile
 using Distributed: addprocs, rmprocs, workers, @everywhere
 
 # add some workers
 rmprocs(workers())
 addprocs(2)
-@everywhere import OptiTest
+@everywhere import OptiTester
 
 # test how speed and motivation levels improve solve times
-ex = Experiment(;#
+optitest = OptiTest(;#
     num=Iterable(1:100),
     speed=Iterable([:slow, :medium, :fast]),
     motivation=Iterable([:low, :high]),
@@ -27,8 +27,8 @@ ex = Experiment(;#
     end
     return test
 end
-# run experiment
-results = run(ex, random_solve_time)
+# run optitest
+results = run(optitest, random_solve_time)
 df = DataFrame(results)
 
 # create style guide

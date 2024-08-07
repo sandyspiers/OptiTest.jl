@@ -1,4 +1,4 @@
-name = "OptiTest"
+name = "OptiTester"
 uuid = "8e73529a-8039-44f2-9503-feb13149ead0"
 authors = ["sandyspiers <sandy.spiers@curtin.edu.au> and contributors"]
 version = "0.1.1-DEV"

@@ -7,6 +7,6 @@ using OptiTester: DataFrame, PerformanceProfile
 using Plots: Plot
 using Test
 
-include("test_experiment.jl")
+include("test_optitest.jl")
 include("test_plots.jl")
 include("test_examples.jl")

@@ -77,7 +77,7 @@
 
         # multiple workers
         addprocs(10)
-        @everywhere import OptiTest
+        @everywhere import OptiTester
         results = run(optitest, rand_run)
         @test all(r.solve_time > 0 for r in results)
         @test minimum(r.id for r in results) < maximum(r.id for r in results)
