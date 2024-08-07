@@ -17,7 +17,9 @@ end
 
 function pair_get(pairs, key, default=nothing)
     isnothing(pairs) && return default
-    idx = findfirst(pair -> first(pair) == key, pairs)
+    isnothing(key) && return default
+    ismissing(key) && return default
+    idx = findfirst(pair -> !isnothing(first(pair)) && first(pair) == key, pairs)
     return isnothing(idx) ? default : last(pairs[idx])
 end
 

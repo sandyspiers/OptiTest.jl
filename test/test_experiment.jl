@@ -97,7 +97,7 @@
             return t
         end
         results = run(ex, rand_run)
-        @test results isa AbstractVecOrMat{OptiTest.Test}
+        @test results isa AbstractVecOrMat{TestRun}
         df = DataFrame(results)
         @test nrow(df) == 20
         @test maximum(df.solve_time) < 1
@@ -112,7 +112,7 @@
             return t
         end
         results = run(ex, rand_run_flacky)
-        @test results isa AbstractVecOrMat{OptiTest.Test}
+        @test results isa AbstractVecOrMat{TestRun}
         df = DataFrame(results)
         @test nrow(df) == 20
         @test maximum(df.solve_time) < 1

@@ -1,10 +1,10 @@
 # # Experiment
 @TypedNamedTuple Experiment
 
-# # Test
-@MutableTypedNamedTuple Test
+# # TestRun
+@MutableTypedNamedTuple TestRun
 function tests(ex::Experiment)
-    return (Test(nt) for nt in _iterate(NamedTuple(ex)))
+    return (TestRun(nt) for nt in _iterate(NamedTuple(ex)))
 end
 
 # # Runner
@@ -14,13 +14,13 @@ function run(ex::Experiment, solver::Function)
 end
 
 # # Dataframe
-function DataFrame(test::Array{Test})
+function DataFrame(test::Array{TestRun})
     return DataFrame(vcat(test...))
 end
-function DataFrame(test::Matrix{Test})
+function DataFrame(test::Matrix{TestRun})
     return DataFrame(vcat(test...))
 end
-function DataFrame(test::Vector{Test})
+function DataFrame(test::Vector{TestRun})
     cols = union(keys.(test)...)
     return DataFrame([c => get.(test, c, missing) for c in cols]...)
 end

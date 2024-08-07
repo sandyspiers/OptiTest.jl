@@ -1,4 +1,5 @@
 # A small example usage to see if motivation improves random run times.
+using OptiTest: Experiment, Iterable, DataFrame
 using OptiTest: run, plot
 using OptiTest: PerformanceProfile
 using Distributed: addprocs, rmprocs, workers, @everywhere
@@ -6,38 +7,44 @@ using Distributed: addprocs, rmprocs, workers, @everywhere
 # add some workers
 rmprocs(workers())
 addprocs(2)
+@everywhere import OptiTest
 
 # test how speed and motivation levels improve solve times
-experiment = Dict(
-    "num_tests!" => 1:100,
-    "speed!" => [:slow, :medium, :fast],
-    "motivation!" => [:low, :high],
-    "save_results" => false,
+ex = Experiment(;#
+    num=Iterable(1:100),
+    speed=Iterable([:slow, :medium, :fast]),
+    motivation=Iterable([:low, :high]),
 )
-@everywhere function random_solve_time!(ex::AbstractDict)::AbstractDict
-    if ex["speed"] == :slow
-        ex["solve_time"] = rand() * 8
-    elseif ex["speed"] == :medium
-        ex["solve_time"] = rand() * 5
-    elseif ex["speed"] == :fast
-        ex["solve_time"] = rand() * 3
+@everywhere function random_solve_time(test)
+    if test.speed == :slow
+        test.solve_time = rand() * 8
+    elseif test.speed == :medium
+        test.solve_time = rand() * 5
+    elseif test.speed == :fast
+        test.solve_time = rand() * 3
     else
-        ex["solve_time"] = 0
+        test.solve_time = 0
     end
-    return ex
+    return test
 end
 # run experiment
-df = run(experiment, random_solve_time!)
+results = run(ex, random_solve_time)
+df = DataFrame(results)
 
 # create style guide
-style_guide = Dict(
-    (:speed => :fast) => Dict(:color => "red"),
-    (:speed => :medium) => Dict(:color => "blue"),
-    (:speed => :slow) => Dict(:color => "purple"),
-    (:motivation => :low) => Dict(:linestyle => :dash),
+sg = (#
+    :speed => (#
+        :fast => (color=:red,),
+        :medium => (color=:blue,),
+        :slow => (color=:purple,),
+    ),
+    :motivation => (#
+        :low => (linestyle=:dash,),
+    ),
 )
 
 # for each uniqup combo of speed, motivate, plot a performance profile
 identifiers = [:speed, :motivation]
 solve_time = :solve_time
-plot(PerformanceProfile(df, identifiers, solve_time); style_guide=style_guide)
+pp = PerformanceProfile(df, identifiers, solve_time)
+plot(pp; style_guide=sg)

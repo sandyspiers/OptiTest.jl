@@ -9,6 +9,10 @@ using NamedTupleTools: merge, split
 using Plots: hline!
 using TypedNamedTuples: @MutableTypedNamedTuple, @TypedNamedTuple
 
+export Experiment, TestRun, Iterable, FlattenIterable, Seed, DataFrame
+export run, plot, plot!
+export PerformanceProfile
+
 # # generic utility functions
 include("utils.jl")
 
