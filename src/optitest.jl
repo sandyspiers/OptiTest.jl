@@ -1,16 +1,15 @@
-# # Experiment
-@TypedNamedTuple Experiment
+# # OptiTest
+@TypedNamedTuple OptiTest
 
 # # TestRun
 @MutableTypedNamedTuple TestRun
-function tests(ex::Experiment)
-    return (TestRun(nt) for nt in _iterate(NamedTuple(ex)))
+function tests(optitest::OptiTest)
+    return (TestRun(nt) for nt in _iterate(NamedTuple(optitest)))
 end
 
 # # Runner
-function run(ex::Experiment, solver::Function)
-    results = pmap(solver, tests(ex))
-    return results
+function run(optitest::OptiTest, solver::Function)
+    return pmap(solver, tests(optitest))
 end
 
 # # Dataframe

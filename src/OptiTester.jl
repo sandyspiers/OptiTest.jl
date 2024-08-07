@@ -1,4 +1,4 @@
-module OptiTest
+module OptiTester
 
 import DataFrames: DataFrame
 import Plots: plot, plot!
@@ -9,16 +9,16 @@ using NamedTupleTools: merge, split
 using Plots: hline!
 using TypedNamedTuples: @MutableTypedNamedTuple, @TypedNamedTuple
 
-export Experiment, TestRun, Iterable, FlattenIterable, Seed, DataFrame
+export Experiment, TestRun, Iterable, FlattenIterable, Seed
+export DataFrame, PerformanceProfile
 export run, plot, plot!
-export PerformanceProfile
 
 # # generic utility functions
 include("utils.jl")
 
-# # setup for running experiments
+# # setup for running optitests
 # # including special iterables and sane defaults
-include("experiment.jl")
+include("optitest.jl")
 
 # # a list of predefined plots and performance profiles
 include("plots.jl")

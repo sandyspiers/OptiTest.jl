@@ -1,9 +1,9 @@
 using Distributed: addprocs, myid, @everywhere, rmprocs, workers
 using DataFrames: DataFrame, nrow
-using OptiTest: Experiment, TestRun, Iterable, FlattenIterable, Seed, DataFrame
-using OptiTest: tests, run, _iterate
-using OptiTest: style
-using OptiTest: plot, PerformanceProfile, PLOT_TYPES
+using OptiTester: OptiTest, TestRun, Iterable, FlattenIterable, Seed, DataFrame
+using OptiTester: tests, run, _iterate
+using OptiTester: PLOT_TYPES, plot, style
+using OptiTester: DataFrame, PerformanceProfile
 using Plots: Plot
 using Test
 

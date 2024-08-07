@@ -1,4 +1,4 @@
-@testset "experiments.jl" begin
+@testset "optitest.jl" begin
     @testset "_iterate" begin
         @test _iterate(1) == 1
         @test _iterate([1, 2, 3]) == [1, 2, 3]
@@ -36,15 +36,15 @@
         @test first(iters).a == :a
         @test last(iters).a == :c
     end
-    @testset "Experiment" begin
-        ex = Experiment(;#
+    @testset "OptiTest" begin
+        optitest = OptiTest(;#
             a=FlattenIterable((#
                 x=Iterable(1:10),
                 s=Seed(0),
             )),
             b=Iterable([:a, :b]),
         )
-        test = tests(ex)
+        test = tests(optitest)
         @test length(test) == 20
         @test first(test).x == 1
         @test first(test).s == 1
@@ -56,7 +56,7 @@
     end
     @testset "run" begin
         # single worker
-        ex = Experiment(;#
+        optitest = OptiTest(;#
             a=FlattenIterable((#
                 x=Iterable(1:10),
                 s=Seed(0),
@@ -71,20 +71,20 @@
         if length(workers()) > 1
             rmprocs(workers())
         end
-        results = run(ex, rand_run)
+        results = run(optitest, rand_run)
         @test all(r.solve_time > 0 for r in results)
         @test all(r.id == 1 for r in results)
 
         # multiple workers
         addprocs(10)
         @everywhere import OptiTest
-        results = run(ex, rand_run)
+        results = run(optitest, rand_run)
         @test all(r.solve_time > 0 for r in results)
         @test minimum(r.id for r in results) < maximum(r.id for r in results)
     end
     @testset "dataframe" begin
         # compliant df
-        ex = Experiment(;#
+        optitest = OptiTest(;#
             a=FlattenIterable((#
                 x=Iterable(1:10),
                 s=Seed(0),
@@ -96,7 +96,7 @@
             t.id = myid()
             return t
         end
-        results = run(ex, rand_run)
+        results = run(optitest, rand_run)
         @test results isa AbstractVecOrMat{TestRun}
         df = DataFrame(results)
         @test nrow(df) == 20
@@ -111,7 +111,7 @@
             end
             return t
         end
-        results = run(ex, rand_run_flacky)
+        results = run(optitest, rand_run_flacky)
         @test results isa AbstractVecOrMat{TestRun}
         df = DataFrame(results)
         @test nrow(df) == 20

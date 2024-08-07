@@ -25,7 +25,7 @@
     end
     @testset "plots" begin
         # # Setup
-        ex = Experiment(;#
+        optitest = OptiTest(;#
             x=Iterable(1:10),
             y=Iterable([:a, :b]),
             z=Iterable([:happy, :sad]),
@@ -44,7 +44,7 @@
                 :b => (markershape=:circle,),
             ),
         )
-        results = run(ex, rand_solve_time)
+        results = run(optitest, rand_solve_time)
         df = DataFrame(results)
         # # Performance profiler
         @test PerformanceProfile in PLOT_TYPES
