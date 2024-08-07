@@ -4,20 +4,13 @@
 # # Test
 @MutableTypedNamedTuple Test
 function tests(ex::Experiment)
-    return [Test(nt) for nt in _iterate(NamedTuple(ex))]
+    return (Test(nt) for nt in _iterate(NamedTuple(ex)))
 end
 
 # # Runner
 function run(ex::Experiment, solver::Function)
     results = pmap(solver, tests(ex))
     return results
-end
-
-# # Specials
-struct Seed
-    seed::Integer
-    seed_ref::Ref{<:Integer}
-    Seed(seed) = new(seed, Ref(seed))
 end
 
 # # Iterable
@@ -29,6 +22,14 @@ struct FlattenIterable <: AbstractIterable
     iterate
 end
 
+# # Special Iterables
+struct Seed
+    seed::Integer
+    seed_ref::Ref{<:Integer}
+    Seed(seed) = new(seed, Ref(seed))
+end
+
+# # Iterate method
 _iterate(any) = any
 _iterate(vec::Vector) = vcat(_iterate.(vec)...)
 _iterate(iter::AbstractIterable) = _iterate(getfield(iter, :iterate))

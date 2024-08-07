@@ -47,10 +47,38 @@
         test = tests(ex)
         @test length(test) == 20
         @test first(test).x == 1
+        @test first(test).s == 1
         @test_throws Exception first(test).a
         @test first(test).b == :a
         @test last(test).x == 10
         @test last(test).s == 10
         @test last(test).b == :b
+    end
+    @testset "run" begin
+        # single worker
+        ex = Experiment(;#
+            a=FlattenIterable((#
+                x=Iterable(1:10),
+                s=Seed(0),
+            )),
+            b=Iterable([:a, :b]),
+        )
+        function rand_run(t)
+            t.solve_time = rand()
+            t.id = myid()
+            return t
+        end
+        rmprocs(workers())
+        results = run(ex, rand_run)
+        @test all(r.solve_time > 0 for r in results)
+        @test all(r.id == 1 for r in results)
+
+        # multiple workers
+        rmprocs(workers())
+        addprocs(10)
+        @everywhere import OptiTest
+        results = run(ex, rand_run)
+        @test all(r.solve_time > 0 for r in results)
+        @test minimum(r.id for r in results) < maximum(r.id for r in results)
     end
 end

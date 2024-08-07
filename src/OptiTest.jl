@@ -1,9 +1,8 @@
 module OptiTest
 
-# import Plots: plot, plot!, hline!
-
+using Distributed: pmap
 using NamedTupleTools: merge, split
-using TypedNamedTuples: @TypedNamedTuple, @MutableTypedNamedTuple
+using TypedNamedTuples: @MutableTypedNamedTuple, @TypedNamedTuple
 
 # # generic utility functions
 include("utils.jl")
