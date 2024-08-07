@@ -81,4 +81,48 @@
         @test all(r.solve_time > 0 for r in results)
         @test minimum(r.id for r in results) < maximum(r.id for r in results)
     end
+    @testset "dataframe" begin
+        rmprocs(workers())
+        addprocs(10)
+        @everywhere import OptiTest
+        # compliant df
+        ex = Experiment(;#
+            a=FlattenIterable((#
+                x=Iterable(1:10),
+                s=Seed(0),
+            )),
+            b=Iterable([:a, :b]),
+        )
+        function rand_run(t)
+            t.solve_time = rand()
+            t.id = myid()
+            return t
+        end
+        results = run(ex, rand_run)
+        @test results isa AbstractVecOrMat{OptiTest.Test}
+        df = DataFrame(results)
+        @test nrow(df) == 20
+        @test maximum(df.solve_time) < 1
+        @test unique(df.b) == [:a, :b]
+
+        # noncomplain df
+        function rand_run_flacky(t)
+            t.solve_time = rand()
+            t.id = myid()
+            if iseven(myid())
+                t.flacky = :hello
+            end
+            return t
+        end
+        results = run(ex, rand_run_flacky)
+        @test results isa AbstractVecOrMat{OptiTest.Test}
+        df = DataFrame(results)
+        @test nrow(df) == 20
+        @test maximum(df.solve_time) < 1
+        @test unique(df.b) == [:a, :b]
+        # make sure some tests dont have flacky
+        @test_throws Exception [t.flacky for t in tests]
+        @test any(ismissing.(df.flacky))
+        @test any(df.flacky .== :hello)
+    end
 end

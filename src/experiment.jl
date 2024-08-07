@@ -13,6 +13,15 @@ function run(ex::Experiment, solver::Function)
     return results
 end
 
+# # Dataframe
+function DataFrame(test::Matrix{Test})
+    return DataFrame(vcat(test...))
+end
+function DataFrame(test::Vector{Test})
+    cols = union(keys.(test)...)
+    return DataFrame([c => get.(test, c, missing) for c in cols]...)
+end
+
 # # Iterable
 abstract type AbstractIterable end
 struct Iterable <: AbstractIterable

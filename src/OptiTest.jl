@@ -1,5 +1,7 @@
 module OptiTest
 
+import DataFrames: DataFrame
+
 using Distributed: pmap
 using NamedTupleTools: merge, split
 using TypedNamedTuples: @MutableTypedNamedTuple, @TypedNamedTuple
